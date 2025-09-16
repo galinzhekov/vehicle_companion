@@ -36,16 +36,14 @@ jobs:
         run: ./gradlew testDebugUnitTest
 
       # Step 5: Run Android Instrumented (Compose UI) Tests (likely in the 'app' module)
-      - name: Run Android Instrumented Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30 # Adjust API level as needed (e.g., 31, 33)
-          target: default
-          arch: x86_64
-          # This assumes your instrumented tests are in the 'app' module.
-          # If they were in a different module, you'd change the command,
-          # e.g., ./gradlew :feature-places:connectedDebugAndroidTest
-          script: ./gradlew :app:connectedDebugAndroidTest # Explicitly target the app module
+      # There are no ui tests currently so it isn't needed
+#      - name: Run Android Instrumented Tests
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: 30
+#          target: default
+#          arch: x86_64
+#          script: ./gradlew :app:connectedDebugAndroidTest
 
       # Step 6: Upload Test Reports
       - name: Upload Unit Test Results
@@ -53,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: | # Use a multi-line path to gather reports from all modules
+          path: | 
             app/build/reports/tests/testDebugUnitTest/
             core-data/build/reports/tests/testDebugUnitTest/
             core-domain/build/reports/tests/testDebugUnitTest/
@@ -66,14 +64,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: instrumented-test-results
-          # This path assumes connected tests are run from the app module
           path: app/build/outputs/androidTest-results/connected/
 
-      # Optional Step 7: Build the APK/AAB
-      # - name: Build Debug APK
-      #   run: ./gradlew :app:assembleDebug # Target the app module for APK
-      # - name: Upload Debug APK
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: app-debug-apk
-      #     path: app/build/outputs/apk/debug/app-debug.apk
+
