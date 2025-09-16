@@ -1,0 +1,79 @@
+name: Android CI Build and Test
+
+on:
+  push:
+    branches: [ "master" ] # Trigger on pushes to your master branch
+  pull_request:
+    branches: [ "master" ] # Trigger on PRs targeting your master branch
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build_and_test:
+    name: Build & Test Android App
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout your code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up JDK
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11' # Match your project's compileOptions
+          cache: 'gradle'
+
+      # Step 3: Grant execute permission for gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # Step 4: Run Unit Tests
+      # This command will run unit tests for all modules by default,
+      # including core-data:testDebugUnitTest and core-domain:testDebugUnitTest
+      - name: Run All Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      # Step 5: Run Android Instrumented (Compose UI) Tests (likely in the 'app' module)
+      - name: Run Android Instrumented Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30 # Adjust API level as needed (e.g., 31, 33)
+          target: default
+          arch: x86_64
+          # This assumes your instrumented tests are in the 'app' module.
+          # If they were in a different module, you'd change the command,
+          # e.g., ./gradlew :feature-places:connectedDebugAndroidTest
+          script: ./gradlew :app:connectedDebugAndroidTest # Explicitly target the app module
+
+      # Step 6: Upload Test Reports
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: | # Use a multi-line path to gather reports from all modules
+            app/build/reports/tests/testDebugUnitTest/
+            core-data/build/reports/tests/testDebugUnitTest/
+            core-domain/build/reports/tests/testDebugUnitTest/
+            feature-garage/build/reports/tests/testDebugUnitTest/
+            feature-places/build/reports/tests/testDebugUnitTest/
+            # Add other modules if they have unit tests
+
+      - name: Upload Instrumented Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-test-results
+          # This path assumes connected tests are run from the app module
+          path: app/build/outputs/androidTest-results/connected/
+
+      # Optional Step 7: Build the APK/AAB
+      # - name: Build Debug APK
+      #   run: ./gradlew :app:assembleDebug # Target the app module for APK
+      # - name: Upload Debug APK
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: app-debug-apk
+      #     path: app/build/outputs/apk/debug/app-debug.apk
