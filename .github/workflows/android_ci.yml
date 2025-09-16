@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11' # Match your project's compileOptions
+          java-version: '17'
           cache: 'gradle'
 
       # Step 3: Grant execute permission for gradlew
